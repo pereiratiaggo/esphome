@@ -8,8 +8,7 @@ esp8266:
   board: esp01_1m
 
 logger:
-  level: VERY_VERBOSE
-
+  
 api:
 
 ota:
@@ -61,6 +60,16 @@ binary_sensor:
     device_class: connectivity
     lambda: |-
       return id(internet_ok);
+      
+sensor:
+  - platform: template
+    name: "Fail Counter"
+    id: internet_fail_counter
+    unit_of_measurement: "x"
+    accuracy_decimals: 0
+    update_interval: 29s
+    lambda: |-
+      return id(fail_counter);
 
 interval:
   - interval: 60s
