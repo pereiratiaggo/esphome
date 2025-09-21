@@ -49,6 +49,11 @@ globals:
     restore_value: true
     initial_value: 'true'
 
+  - id: fail_counter
+    type: int
+    restore_value: no
+    initial_value: '0'
+
 binary_sensor:
   - platform: template
     name: "Internet Status"
@@ -68,11 +73,18 @@ interval:
             then:
               - lambda: |-
                   if (response->status_code == 200) {
+                    id(fail_counter) = 0;   // reset contador em caso de sucesso
                     id(internet_ok) = true;
                   } else {
-                    id(internet_ok) = false;
+                    id(fail_counter) += 1;
+                    if (id(fail_counter) >= 5) {
+                      id(internet_ok) = false;
+                    }
                   }
           on_error:
             then:
               - lambda: |-
-                  id(internet_ok) = false;
+                  id(fail_counter) += 1;
+                  if (id(fail_counter) >= 5) {
+                    id(internet_ok) = false;
+                  }
