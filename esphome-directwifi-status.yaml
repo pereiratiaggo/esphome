@@ -8,6 +8,7 @@ esp8266:
   board: esp01_1m
 
 logger:
+  level: VERY_VERBOSE
   
 api:
 
@@ -86,7 +87,7 @@ interval:
                     id(internet_ok) = true;
                   } else {
                     id(fail_counter) += 1;
-                    if (id(fail_counter) >= 5) {
+                    if (id(fail_counter) >= 10) {
                       id(internet_ok) = false;
                     }
                   }
@@ -94,6 +95,6 @@ interval:
             then:
               - lambda: |-
                   id(fail_counter) += 1;
-                  if (id(fail_counter) >= 5) {
+                  if (id(fail_counter) >= 10) {
                     id(internet_ok) = false;
                   }
