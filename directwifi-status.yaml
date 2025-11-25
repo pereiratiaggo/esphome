@@ -1,0 +1,104 @@
+esphome:
+  name: esphome-directwifi-status
+  friendly_name: DirectWifi-Status
+  min_version: 2024.11.0
+  name_add_mac_suffix: false
+
+esp8266:
+  board: esp01_1m
+
+logger:
+  level: VERY_VERBOSE
+  
+api:
+
+ota:
+  - platform: esphome
+  - platform: web_server
+
+wifi:
+  #ssid: !secret wifi_ssid
+  #password: !secret wifi_password
+  networks:
+  #- ssid: !secret wifi_ssid
+  #  password: !secret wifi_password
+  #  priority: 0.0
+  #- ssid: !secret wifi2_ssid
+  #  password: !secret wifi2_password
+  #  priority: 1.0
+  - ssid: !secret wifi3_ssid
+    password: !secret wifi3_password
+  #  priority: 2.0
+
+  ap:
+    ssid: "EspHome-DirectWifi"
+    password: "12345678"
+
+web_server:
+  port: 80
+  version: 3
+
+globals:
+  - id: fail_count
+    type: int
+    initial_value: '0'
+
+binary_sensor:
+  - platform: template
+    id: internet_status
+    name: "Internet Status"
+    initial_value: 'true'
+
+sensor:
+  - platform: template
+    id: internet_fail_count
+    name: "Internet Fails Count"
+    update_interval: never
+
+interval:
+  - interval: 30s
+    then:
+      - http_request.get:
+          url: http://8.8.8.8/
+          on_response:
+            then:
+              - lambda: |-
+                  id(fail_count) = 0;
+              - sensor.template.publish:
+                  id: internet_fail_count
+                  state: 0
+              - binary_sensor.template.publish:
+                  id: internet_status
+                  state: true
+
+          on_error:
+            then:
+              - http_request.get:
+                  url: http://neverssl.com/
+                  on_response:
+                    then:
+                      - lambda: |-
+                          id(fail_count) = 0;
+                      - sensor.template.publish:
+                          id: internet_fail_count
+                          state: 0
+                      - binary_sensor.template.publish:
+                          id: internet_status
+                          state: true
+
+                  on_error:
+                    then:
+                      - lambda: |-
+                          id(fail_count)++;
+                          if (id(fail_count) > 3) id(fail_count) = 3;
+                      - sensor.template.publish:
+                          id: internet_fail_count
+                          state: !lambda 'return id(fail_count);'
+                      - lambda: |-
+                          if (id(fail_count) >= 3) {
+                            id(internet_status).publish_state(false);
+                          }
+
+http_request:
+  useragent: esphome-check
+  verify_ssl: false
