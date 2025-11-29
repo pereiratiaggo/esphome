@@ -47,7 +47,6 @@ binary_sensor:
   - platform: template
     id: internet_status
     name: "Internet Status"
-    initial_value: 'true'
 
 sensor:
   - platform: template
@@ -56,10 +55,10 @@ sensor:
     update_interval: never
 
 interval:
-  - interval: 30s
+  - interval: 120s
     then:
       - http_request.get:
-          url: http://8.8.8.8/
+          url: !secret url_test
           on_response:
             then:
               - lambda: |-
@@ -74,7 +73,7 @@ interval:
           on_error:
             then:
               - http_request.get:
-                  url: http://neverssl.com/
+                  url: !secret url_test2
                   on_response:
                     then:
                       - lambda: |-
@@ -100,5 +99,5 @@ interval:
                           }
 
 http_request:
-  useragent: esphome-check
+  useragent: esphome-directwifi-check
   verify_ssl: false
